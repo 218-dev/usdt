@@ -1,1 +1,569 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2D3748;
+            --secondary-color: #4A5568;
+            --accent-color: #3182CE;
+            --light-color: #E2E8F0;
+            --text-color: #2D3748;
+            --background-color: #F7FAFC;
+        }
+        
+        * {
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding-top: 56px;
+        }
+        
+        .navbar {
+            background-color: var(--primary-color);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-left: 10px;
+            color: var(--light-color);
+        }
+        
+        .hero {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .request-card {
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .request-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        
+        .request-type-buy {
+            background-color: #C6F6D5;
+            color: #276749;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .request-type-sell {
+            background-color: #FED7D7;
+            color: #C53030;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .provider-logo {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            margin-left: 10px;
+        }
+        
+        .user-requests {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .status-available {
+            color: #38A169;
+            font-weight: bold;
+        }
+        
+        .status-completed {
+            color: #718096;
+            font-weight: bold;
+        }
+        
+        .btn-action {
+            margin-left: 5px;
+        }
+        
+        .whatsapp-btn {
+            background-color: #25D366;
+            color: white;
+        }
+        
+        .whatsapp-btn:hover {
+            background-color: #128C7E;
+            color: white;
+        }
+        
+        .provider-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background-color: #EDF2F7;
+            margin-left: 5px;
+        }
+        
+        .filter-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box input {
+            padding-right: 40px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand logo" href="#">
+                <i class="fas fa-mobile-alt"></i>
+                <span>منصة تداول</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-home"></i> الرئيسية</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#requests"><i class="fas fa-list"></i> جميع الطلبات</a></li>
+                    {% if session.user_id %}
+                        <li class="nav-item"><a class="nav-link" href="#my-requests"><i class="fas fa-user"></i> طلباتي</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#addRequestModal"><i class="fas fa-plus"></i> إضافة طلب</a></li>
+                    {% endif %}
+                </ul>
+                <div class="d-flex">
+                    {% if session.user_id %}
+                        <span class="navbar-text me-3">مرحباً، {{ session.user_name }}</span>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a>
+                    {% else %}
+                        <button class="btn btn-outline-light btn-sm me-2" data-bs-toggle="modal" data-bs-target="#loginModal"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</button>
+                        <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal"><i class="fas fa-user-plus"></i> إنشاء حساب</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
 
+    <div class="hero">
+        <div class="container">
+            <h1 class="display-4">منصة تدوال بكل سهولة</h1>
+            <p class="lead">بيع وشراء رصيد ليبيانا، المدار الجديد و USDT بأفضل الأسعار</p>
+        </div>
+    </div>
+
+    <div class="container">
+        {% if error %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endif %}
+        
+        {% if message == "login_required" %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                يرجى تسجيل الدخول لإضافة طلب جديد
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endif %}
+
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="search-box">
+                        <input type="text" class="form-control" placeholder="ابحث في الطلبات..." id="searchInput">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="filterType">
+                        <option value="">جميع الأنواع</option>
+                        <option value="شراء">شراء</option>
+                        <option value="بيع">بيع</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="filterProvider">
+                        <option value="">جميع مقدمي الخدمة</option>
+                        <option value="ليبيانا">ليبيانا</option>
+                        <option value="المدار الجديد">المدار الجديد</option>
+                        <option value="USDT">USDT</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <section id="requests" class="mb-5">
+            <h2 class="mb-4 border-bottom pb-2">آخر طلبات التبادل</h2>
+            
+            <div class="row" id="requestsContainer">
+                {% if not requests %}
+                    <div class="col-12">
+                        <div class="alert alert-info">لا توجد طلبات متاحة حالياً</div>
+                    </div>
+                {% else %}
+                    {% for request in requests %}
+                        <div class="col-md-6 col-lg-4 request-item" 
+                             data-type="{{ request.type }}"
+                             data-provider="{{ request.provider }}"
+                             data-search="{{ request.type }} {{ request.provider }} {{ request.amount }} {{ request.price }} {{ request.location }} {{ request.user_name }}">
+                            <div class="card request-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="{% if request.type == 'شراء' %}request-type-buy{% else %}request-type-sell{% endif %}">
+                                            {{ request.type }}
+                                        </span>
+                                        <span class="provider-badge">
+                                            {% if request.provider == "ليبيانا" %}
+                                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9eFMT_Ot5Zbg5ADJKeVM4s2Q41ASjuyn8dw&s" class="provider-logo" alt="ليبيانا">
+                                            {% elif request.provider == "المدار الجديد" %}
+                                                <img src="https://play-lh.googleusercontent.com/BHVcdZSbnCjZ6gNO2xX6iOyGwM5HvCb5hP-8T2OI7hdlDxOMC8UzquoZbOSNb07iiQ" class="provider-logo" alt="المدار الجديد">
+                                            {% else %}
+                                                <img src="https://upload.wikimedia.org/wikipedia/commons/0/01/USDT_Logo.png" class="provider-logo" alt="USDT">
+                                            {% endif %}
+                                            {{ request.provider }}
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>الكمية:</span>
+                                            <span><strong>{{ request.amount }}</strong></span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>السعر:</span>
+                                            <span><strong>{{ request.price }} د.ل</strong></span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>الموقع:</span>
+                                            <span>{{ request.location }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>الحالة:</span>
+                                            <span class="{% if request.status == 'متوفر' %}status-available{% else %}status-completed{% endif %}">
+                                                {{ request.status }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if request.description %}
+                                        <p class="card-text border-top pt-2">{{ request.description }}</p>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <span><i class="fas fa-user"></i> {{ request.user_name }}</span>
+                                        <a href="https://wa.me/{{ request.phone|replace(' ', '')|replace('+', '')|replace('-', '') }}?text=مرحباً، أنا مهتم بطلب {{ request.type }} {{ request.provider }} الذي أعلنت عنه على المنصة" 
+                                           class="btn btn-sm whatsapp-btn" target="_blank">
+                                            <i class="fab fa-whatsapp"></i> تواصل
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="card-footer text-muted">
+                                    <small>{{ request.created_at[:16] }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </section>
+
+        {% if session.user_id %}
+            <section id="my-requests" class="user-requests">
+                <h2 class="mb-4 border-bottom pb-2">طلباتي</h2>
+                
+                {% if not user_requests %}
+                    <div class="alert alert-info">لم تقم بإضافة أي طلبات بعد</div>
+                {% else %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>النوع</th>
+                                    <th>مقدم الخدمة</th>
+                                    <th>الكمية</th>
+                                    <th>السعر</th>
+                                    <th>الموقع</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in user_requests %}
+                                    <tr>
+                                        <td><span class="{% if request.type == 'شراء' %}request-type-buy{% else %}request-type-sell{% endif %}">{{ request.type }}</span></td>
+                                        <td>{{ request.provider }}</td>
+                                        <td>{{ request.amount }}</td>
+                                        <td>{{ request.price }} د.ل</td>
+                                        <td>{{ request.location }}</td>
+                                        <td><span class="{% if request.status == 'متوفر' %}status-available{% else %}status-completed{% endif %}">{{ request.status }}</span></td>
+                                        <td>
+                                            <form method="post" action="{{ url_for('toggle_status') }}" class="d-inline">
+                                                <input type="hidden" name="request_id" value="{{ request.id }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary btn-action">
+                                                    <i class="fas fa-sync-alt"></i> تغيير الحالة
+                                                </button>
+                                            </form>
+                                            <form method="post" action="{{ url_for('delete_request') }}" class="d-inline">
+                                                <input type="hidden" name="request_id" value="{{ request.id }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger btn-action" onclick="return confirm('هل أنت متأكد من حذف هذا الطلب؟')">
+                                                    <i class="fas fa-trash"></i> حذف
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </section>
+        {% endif %}
+    </div>
+
+    <!-- نماذج التسجيل والطلبات -->
+    <!-- نموذج إنشاء حساب -->
+    <div class="modal fade" id="registerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إنشاء حساب جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="{{ url_for('register') }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">الاسم الكامل</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">رقم الهاتف (واتساب)</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">كلمة السر</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">تأكيد كلمة السر</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">إنشاء حساب</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- نموذج تسجيل الدخول -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">تسجيل الدخول</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="{{ url_for('login') }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="login_phone" class="form-label">رقم الهاتف</label>
+                            <input type="tel" class="form-control" id="login_phone" name="phone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="login_password" class="form-label">كلمة السر</label>
+                            <input type="password" class="form-control" id="login_password" name="password" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">تسجيل الدخول</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- نموذج إضافة طلب -->
+    <div class="modal fade" id="addRequestModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">إضافة طلب جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="{{ url_for('add_request') }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">نوع الطلب</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="type" id="type_buy" value="شراء" checked>
+                                    <label class="form-check-label" for="type_buy">شراء</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="type" id="type_sell" value="بيع">
+                                    <label class="form-check-label" for="type_sell">بيع</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="provider" class="form-label">نوع الخدمة</label>
+                            <select class="form-select" id="provider" name="provider" required>
+                                <option value="ليبيانا">ليبيانا</option>
+                                <option value="المدار الجديد">المدار الجديد</option>
+                                <option value="USDT">USDT</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">الكمية</label>
+                            <input type="text" class="form-control" id="amount" name="amount" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="price" class="form-label">السعر (دينار ليبي)</label>
+                            <input type="text" class="form-control" id="price" name="price" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="location" class="form-label">الموقع</label>
+                            <input type="text" class="form-control" id="location" name="location" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">وصف إضافي (اختياري)</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">إضافة الطلب</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5>منصة تداول</h5>
+                    <p>منصة آمنة وسهلة لتبادل تدوال والعملات الرقمية</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>روابط سريعة</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#requests" class="text-white">جميع الطلبات</a></li>
+                        <li><a href="#" data-bs-toggle="modal" data-bs-target="#addRequestModal" class="text-white">إضافة طلب جديد</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>التواصل</h5>
+                    <p><i class="fas fa-envelope me-2"></i> info@trading-platform.com</p>
+                </div>
+            </div>
+            <hr>
+            <p class="text-center mb-0">© 2025 منصة تداول. جميع الحقوق محفوظة</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // التحقق من تطابق كلمات المرور في نموذج التسجيل
+        document.querySelector('form[action="{{ url_for("register") }}"]')?.addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('كلمات المرور غير متطابقة');
+            }
+        });
+
+        // فلترة الطلبات
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const filterType = document.getElementById('filterType');
+            const filterProvider = document.getElementById('filterProvider');
+            const requestItems = document.querySelectorAll('.request-item');
+            
+            function filterRequests() {
+                const searchText = searchInput.value.toLowerCase();
+                const typeValue = filterType.value;
+                const providerValue = filterProvider.value;
+                
+                requestItems.forEach(item => {
+                    const type = item.getAttribute('data-type');
+                    const provider = item.getAttribute('data-provider');
+                    const searchContent = item.getAttribute('data-search').toLowerCase();
+                    
+                    const matchesSearch = searchContent.includes(searchText);
+                    const matchesType = !typeValue || type === typeValue;
+                    const matchesProvider = !providerValue || provider === providerValue;
+                    
+                    if (matchesSearch && matchesType && matchesProvider) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            }
+            
+            searchInput.addEventListener('input', filterRequests);
+            filterType.addEventListener('change', filterRequests);
+            filterProvider.addEventListener('change', filterRequests);
+            
+            // فتح النماذج بناءً على معاملات URL
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.has('show') && urlParams.get('show') === 'register') {
+                const registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
+                registerModal.show();
+            } else if (urlParams.has('show') && urlParams.get('show') === 'login') {
+                const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                loginModal.show();
+            }
+        });
+    </script>
+</body>
+</html>
