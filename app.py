@@ -30,57 +30,21 @@ def save_json(file, data):
     with open(file, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-# دالة لتشفير البيانات
-def encrypt_data(data, key):
-    key = hashlib.sha256(key.encode()).digest()
-    iv = get_random_bytes(AES.block_size)
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    ct_bytes = cipher.encrypt(pad(data.encode(), AES.block_size))
-    return base64.b64encode(iv + ct_bytes).decode('utf-8')
-
-# دالة لفك تشفير البيانات
-def decrypt_data(enc_data, key):
-    key = hashlib.sha256(key.encode()).digest()
-    enc_data = base64.b64decode(enc_data)
-    iv = enc_data[:AES.block_size]
-    ct = enc_data[AES.block_size:]
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    pt = unpad(cipher.decrypt(ct), AES.block_size)
-    return pt.decode('utf-8')
-
 # دالة للتحقق من رقم الهاتف الليبي
 def validate_libyan_phone(phone):
     # إزالة أي أحرف غير رقمية
     cleaned_phone = re.sub(r'\D', '', phone)
     
-    # إذا بدأ بـ 218، تأكد أن الطول 12 رقمًا
-    if cleaned_phone.startswith('218'):
-        return len(cleaned_phone) == 12
-    # إذا بدأ بـ 0، تأكد أن الطول 10 أرقام ثم أضف 218
-    elif cleaned_phone.startswith('0'):
-        return len(cleaned_phone) == 10
-    # إذا كان 9 أرقام فقط، أضف 0 في البداية
-    elif len(cleaned_phone) == 9:
-        return True
-    else:
-        return False
+    # التحقق من الطول المناسب (9 أرقام)
+    return len(cleaned_phone) == 9
 
-# دالة لتنسيق رقم الهاتف للواتساب
-def format_phone_for_whatsapp(phone):
-    # إزالة أي أحرف غير رقمية
-    cleaned_phone = re.sub(r'\D', '', phone)
-    
-    # إذا كان الرقم 9 أرقام، أضف 218 في البداية
-    if len(cleaned_phone) == 9:
-        return f"218{cleaned_phone}"
-    # إذا بدأ بـ 0 وكان 10 أرقام، استبدل 0 بـ 218
-    elif cleaned_phone.startswith('0') and len(cleaned_phone) == 10:
-        return f"218{cleaned_phone[1:]}"
-    # إذا كان يحتوي على 218 بالفعل، اتركه كما هو
-    elif cleaned_phone.startswith('218') and len(cleaned_phone) == 12:
-        return cleaned_phone
-    else:
-        return cleaned_phone
+# دالة للحصول على رقم الهاتف من المستخدم
+def get_user_phone(user_id):
+    users = load_json(USERS_JSON)
+    for user in users:
+        if user["id"] == user_id:
+            return user["phone"]
+    return None
 
 # الصفحة الرئيسية
 @app.route('/')
@@ -95,10 +59,19 @@ def index():
     # فرز الطلبات بالأحدث أولاً
     requests.sort(key=lambda x: datetime.strptime(x["created_at"], "%Y-%m-%d %H:%M:%S"), reverse=True)
     
+    # إضافة رقم الهاتف لكل طلب
+    for req in requests:
+        user_phone = get_user_phone(req['user_id'])
+        req['user_phone'] = user_phone
+    
     # تحديد الطلبات الخاصة بالمستخدم إذا كان مسجلاً
     user_requests = []
     if 'user_id' in session:
         user_requests = [req for req in requests if req['user_id'] == session['user_id']]
+        # إضافة رقم الهاتف لطلبات المستخدم
+        for req in user_requests:
+            user_phone = get_user_phone(req['user_id'])
+            req['user_phone'] = user_phone
     
     return render_template('index.html', 
                          page_title="منصة تبادل تدوال",
@@ -125,26 +98,20 @@ def register():
     
     users = load_json(USERS_JSON)
     
-    # تنسيق رقم الهاتف للتخزين (9 أرقام)
+    # تنظيف رقم الهاتف (إزالة أي أحرف غير رقمية)
     cleaned_phone = re.sub(r'\D', '', phone)
-    if len(cleaned_phone) == 9:
-        formatted_phone = cleaned_phone
-    elif len(cleaned_phone) == 10 and cleaned_phone.startswith('0'):
-        formatted_phone = cleaned_phone[1:]
-    else:
-        formatted_phone = cleaned_phone[-9:]  # أخذ آخر 9 أرقام
     
     # التحقق من عدم وجود رقم الهاتف مسبقاً
     for user in users:
         user_phone = re.sub(r'\D', '', user["phone"])
-        if user_phone.endswith(formatted_phone):
+        if user_phone == cleaned_phone:
             return redirect(url_for('index', error="رقم الهاتف مسجل مسبقاً"))
     
     # إنشاء مستخدم جديد
     new_user = {
         "id": str(datetime.now().timestamp()),
         "name": name,
-        "phone": formatted_phone,  # تخزينه كـ 9 أرقام فقط
+        "phone": cleaned_phone,  # تخزينه كـ 9 أرقام فقط
         "password": hashlib.sha256(password.encode()).hexdigest(),
         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
@@ -168,16 +135,12 @@ def login():
     
     # تنظيف رقم الهاتف المدخل
     cleaned_phone = re.sub(r'\D', '', phone)
-    if len(cleaned_phone) == 10 and cleaned_phone.startswith('0'):
-        cleaned_phone = cleaned_phone[1:]
-    elif len(cleaned_phone) > 9:
-        cleaned_phone = cleaned_phone[-9:]
     
     users = load_json(USERS_JSON)
     
     for user in users:
         user_phone = re.sub(r'\D', '', user["phone"])
-        if user_phone.endswith(cleaned_phone) and user["password"] == hashed_password:
+        if user_phone == cleaned_phone and user["password"] == hashed_password:
             session['user_id'] = user['id']
             session['user_name'] = user['name']
             session['user_phone'] = user['phone']
@@ -210,7 +173,6 @@ def add_request():
         "id": str(datetime.now().timestamp()),
         "user_id": session['user_id'],
         "user_name": session['user_name'],
-        "user_phone": session['user_phone'],
         "type": type_req,
         "provider": provider,
         "amount": amount,
@@ -237,13 +199,13 @@ def delete_request():
     requests = load_json(REQUESTS_JSON)
     
     # البحث عن الطلب وحذفه إذا كان يخص المستخدم
-    requests = [req for req in requests if not (req['id'] == request_id and req['user_id'] == session['user_id'])]
+    updated_requests = [req for req in requests if not (req['id'] == request_id and req['user_id'] == session['user_id'])]
     
-    save_json(REQUESTS_JSON, requests)
+    save_json(REQUESTS_JSON, updated_requests)
     
     return redirect(url_for('index'))
 
-# تغيير حالة الطلب
+# تغيير حالة الطلب - الإصلاح الكامل
 @app.route('/toggle_status', methods=['POST'])
 def toggle_status():
     if 'user_id' not in session:
@@ -252,16 +214,19 @@ def toggle_status():
     request_id = request.form.get('request_id', '')
     
     requests = load_json(REQUESTS_JSON)
+    updated = False
     
     for req in requests:
         if req['id'] == request_id and req['user_id'] == session['user_id']:
             req['status'] = "مكتمل" if req['status'] == "متوفر" else "متوفر"
+            updated = True
             break
     
-    save_json(REQUESTS_JSON, requests)
+    if updated:
+        save_json(REQUESTS_JSON, requests)
     
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=True)
