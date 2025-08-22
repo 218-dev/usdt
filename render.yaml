@@ -1,0 +1,35 @@
+# render.yaml
+
+services:
+  - type: web
+    name: trading-platform
+    env: python
+    plan: free
+    region: frankfurt  # أو أي region قريب منك
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.12
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        value: "TradingSecureKey2024"  # تغيير هذا المفتاح في الإنتاج
+
+    # خصائص التوسع التلقائي (لخطة free محدودة)
+    autoDeploy: true
+    disk:
+      name: data
+      mountPath: /opt/render/data
+      sizeGB: 1
+
+    # health check
+    healthCheckPath: /
+    initialDelaySec: 30
+
+# إعدادات قاعدة البيانات (اختياري - يمكن إضافتها لاحقاً)
+# databases:
+#   - name: tradingdb
+#     databaseName: trading
+#     plan: free
+#     ipAllowList: []  # للسماح للجميع
