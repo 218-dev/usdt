@@ -57,6 +57,9 @@
             margin-bottom: 20px;
             border: none;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
         
         .request-card:hover {
@@ -151,6 +154,37 @@
             transform: translateY(-50%);
             color: #6c757d;
         }
+        
+        .card-body {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-content {
+            flex-grow: 1;
+        }
+        
+        .card-footer {
+            margin-top: auto;
+        }
+        
+        .phone-input-group {
+            direction: ltr;
+        }
+        
+        .phone-prefix {
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem 0 0 0.375rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
     </style>
 </head>
 <body>
@@ -243,59 +277,65 @@
                     </div>
                 {% else %}
                     {% for request in requests %}
-                        <div class="col-md-6 col-lg-4 request-item" 
+                        <div class="col-md-6 col-lg-4 mb-4 request-item" 
                              data-type="{{ request.type }}"
                              data-provider="{{ request.provider }}"
                              data-search="{{ request.type }} {{ request.provider }} {{ request.amount }} {{ request.price }} {{ request.location }} {{ request.user_name }}">
                             <div class="card request-card">
                                 <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="{% if request.type == 'شراء' %}request-type-buy{% else %}request-type-sell{% endif %}">
-                                            {{ request.type }}
-                                        </span>
-                                        <span class="provider-badge">
-                                            {% if request.provider == "ليبيانا" %}
-                                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9eFMT_Ot5Zbg5ADJKeVM4s2Q41ASjuyn8dw&s" class="provider-logo" alt="ليبيانا">
-                                            {% elif request.provider == "المدار الجديد" %}
-                                                <img src="https://play-lh.googleusercontent.com/BHVcdZSbnCjZ6gNO2xX6iOyGwM5HvCb5hP-8T2OI7hdlDxOMC8UzquoZbOSNb07iiQ" class="provider-logo" alt="المدار الجديد">
-                                            {% else %}
-                                                <img src="https://upload.wikimedia.org/wikipedia/commons/0/01/USDT_Logo.png" class="provider-logo" alt="USDT">
-                                            {% endif %}
-                                            {{ request.provider }}
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span>الكمية:</span>
-                                            <span><strong>{{ request.amount }}</strong></span>
-                                        </div>
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span>السعر:</span>
-                                            <span><strong>{{ request.price }} د.ل</strong></span>
-                                        </div>
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span>الموقع:</span>
-                                            <span>{{ request.location }}</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span>الحالة:</span>
-                                            <span class="{% if request.status == 'متوفر' %}status-available{% else %}status-completed{% endif %}">
-                                                {{ request.status }}
+                                    <div class="card-content">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <span class="{% if request.type == 'شراء' %}request-type-buy{% else %}request-type-sell{% endif %}">
+                                                {{ request.type }}
+                                            </span>
+                                            <span class="provider-badge">
+                                                {% if request.provider == "ليبيانا" %}
+                                                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9eFMT_Ot5Zbg5ADJKeVM4s2Q41ASjuyn8dw&s" class="provider-logo" alt="ليبيانا">
+                                                {% elif request.provider == "المدار الجديد" %}
+                                                    <img src="https://play-lh.googleusercontent.com/BHVcdZSbnCjZ6gNO2xX6iOyGwM5HvCb5hP-8T2OI7hdlDxOMC8UzquoZbOSNb07iiQ" class="provider-logo" alt="المدار الجديد">
+                                                {% else %}
+                                                    <img src="https://upload.wikimedia.org/wikipedia/commons/0/01/USDT_Logo.png" class="provider-logo" alt="USDT">
+                                                {% endif %}
+                                                {{ request.provider }}
                                             </span>
                                         </div>
+                                        
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>الكمية:</span>
+                                                <span><strong>{{ request.amount }}</strong></span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>السعر:</span>
+                                                <span><strong>{{ request.price }} د.ل</strong></span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>الموقع:</span>
+                                                <span>{{ request.location }}</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span>الحالة:</span>
+                                                <span class="{% if request.status == 'متوفر' %}status-available{% else %}status-completed{% endif %}">
+                                                    {{ request.status }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if request.description %}
+                                            <p class="card-text border-top pt-2">{{ request.description }}</p>
+                                        {% endif %}
                                     </div>
                                     
-                                    {% if request.description %}
-                                        <p class="card-text border-top pt-2">{{ request.description }}</p>
-                                    {% endif %}
-                                    
-                                    <div class="d-flex justify-content-between align-items-center mt-3">
-                                        <span><i class="fas fa-user"></i> {{ request.user_name }}</span>
-                                        <a href="https://wa.me/{{ request.phone|replace(' ', '')|replace('+', '')|replace('-', '') }}?text=مرحباً، أنا مهتم بطلب {{ request.type }} {{ request.provider }} الذي أعلنت عنه على المنصة" 
-                                           class="btn btn-sm whatsapp-btn" target="_blank">
-                                            <i class="fab fa-whatsapp"></i> تواصل
-                                        </a>
+                                    <div class="mt-auto">
+                                        <div class="d-flex justify-content-between align-items-center mt-3">
+                                            <span><i class="fas fa-user"></i> {{ request.user_name }}</span>
+                                            {% if request.user_phone %}
+                                            <a href="https://wa.me/218{{ request.user_phone }}?text=مرحباً، أنا مهتم بطلب {{ request.type }} {{ request.provider }} الذي أعلنت عنه على المنصة" 
+                                               class="btn btn-sm whatsapp-btn" target="_blank">
+                                                <i class="fab fa-whatsapp"></i> تواصل
+                                            </a>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="card-footer text-muted">
@@ -338,18 +378,20 @@
                                         <td>{{ request.location }}</td>
                                         <td><span class="{% if request.status == 'متوفر' %}status-available{% else %}status-completed{% endif %}">{{ request.status }}</span></td>
                                         <td>
-                                            <form method="post" action="{{ url_for('toggle_status') }}" class="d-inline">
-                                                <input type="hidden" name="request_id" value="{{ request.id }}">
-                                                <button type="submit" class="btn btn-sm btn-outline-secondary btn-action">
-                                                    <i class="fas fa-sync-alt"></i> تغيير الحالة
-                                                </button>
-                                            </form>
-                                            <form method="post" action="{{ url_for('delete_request') }}" class="d-inline">
-                                                <input type="hidden" name="request_id" value="{{ request.id }}">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger btn-action" onclick="return confirm('هل أنت متأكد من حذف هذا الطلب؟')">
-                                                    <i class="fas fa-trash"></i> حذف
-                                                </button>
-                                            </form>
+                                            <div class="action-buttons">
+                                                <form method="post" action="{{ url_for('toggle_status') }}" class="d-inline">
+                                                    <input type="hidden" name="request_id" value="{{ request.id }}">
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary btn-action">
+                                                        <i class="fas fa-sync-alt"></i> تغيير الحالة
+                                                    </button>
+                                                </form>
+                                                <form method="post" action="{{ url_for('delete_request') }}" class="d-inline">
+                                                    <input type="hidden" name="request_id" value="{{ request.id }}">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger btn-action" onclick="return confirm('هل أنت متأكد من حذف هذا الطلب؟')">
+                                                        <i class="fas fa-trash"></i> حذف
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -370,7 +412,7 @@
                     <h5 class="modal-title">إنشاء حساب جديد</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form method="post" action="{{ url_for('register') }}">
+                <form method="post" action="{{ url_for('register') }}" id="registerForm">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="name" class="form-label">الاسم الكامل</label>
@@ -378,7 +420,13 @@
                         </div>
                         <div class="mb-3">
                             <label for="phone" class="form-label">رقم الهاتف (واتساب)</label>
-                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                            <div class="input-group phone-input-group">
+                                <span class="input-group-text phone-prefix">218</span>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       pattern="[0-9]{9}" title="يجب إدخال 9 أرقام فقط" 
+                                       placeholder="9xxxxxxxx" required>
+                            </div>
+                            <small class="form-text text-muted">ادخل 9 أرقام فقط (بدون 218)</small>
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">كلمة السر</label>
@@ -410,7 +458,12 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="login_phone" class="form-label">رقم الهاتف</label>
-                            <input type="tel" class="form-control" id="login_phone" name="phone" required>
+                            <div class="input-group phone-input-group">
+                                <span class="input-group-text phone-prefix">218</span>
+                                <input type="tel" class="form-control" id="login_phone" name="phone" 
+                                       pattern="[0-9]{9}" title="يجب إدخال 9 أرقام فقط" 
+                                       placeholder="9xxxxxxxx" required>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="login_password" class="form-label">كلمة السر</label>
@@ -510,7 +563,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // التحقق من تطابق كلمات المرور في نموذج التسجيل
-        document.querySelector('form[action="{{ url_for("register") }}"]')?.addEventListener('submit', function(e) {
+        document.getElementById('registerForm')?.addEventListener('submit', function(e) {
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm_password').value;
             
@@ -553,15 +606,19 @@
             filterType.addEventListener('change', filterRequests);
             filterProvider.addEventListener('change', filterRequests);
             
-            // فتح النماذج بناءً على معاملات URL
-            const urlParams = new URLSearchParams(window.location.search);
+            // التحقق من صحة رقم الهاتف
+            const phoneInput = document.getElementById('phone');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '').slice(0, 9);
+                });
+            }
             
-            if (urlParams.has('show') && urlParams.get('show') === 'register') {
-                const registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
-                registerModal.show();
-            } else if (urlParams.has('show') && urlParams.get('show') === 'login') {
-                const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-                loginModal.show();
+            const loginPhoneInput = document.getElementById('login_phone');
+            if (loginPhoneInput) {
+                loginPhoneInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '').slice(0, 9);
+                });
             }
         });
     </script>
